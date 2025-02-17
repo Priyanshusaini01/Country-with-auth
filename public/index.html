@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Login UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .background-blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: blobMove 20s infinite alternate;
+        }
+
+        @keyframes blobMove {
+            0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            100% { transform: translate(50%, 50%) scale(1.2) rotate(180deg); }
+        }
+
+        .container {
+            width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+
+        .container:hover {
+            transform: translateY(-5px) rotateX(2deg) rotateY(2deg);
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            color: white;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h2 {
+            color: #2d3436;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: #4ecdc4;
+        }
+
+        .input-group {
+            position: relative;
+            margin: 25px 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            background: #f5f6fa;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            background: white;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.2);
+            outline: none;
+        }
+
+        .input-group i {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4ecdc4;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #4ecdc4, #45b7af);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #45b7af, #3da89f);
+            letter-spacing: 2px;
+        }
+
+        .toggle {
+            margin-top: 20px;
+            color: #2d3436;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .toggle:hover {
+            color: #4ecdc4;
+        }
+
+        .error {
+            color: #ff7675;
+            margin-top: 10px;
+            font-size: 14px;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(10px); }
+            50% { transform: translateX(-10px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                width: 90%;
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-blob"></div>
+    <div class="container">
+        <div class="logo">
+            <i class="fas fa-user-astronaut"></i>
+        </div>
+        <h2 id="formTitle">Welcome Back!</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Username" required>
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password" required>
+                <i class="fas fa-lock"></i>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <p class="error" id="errorMessage"></p>
+    </div>
+
+    <script>
+        // Redirect to dashboard if token exists
+        if (localStorage.getItem("token")) {
+            window.location.href = "dashboard.html";
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                localStorage.setItem("token", data.token);
+                window.location.href = "dashboard.html";  // Redirect after login
+            } else {
+                errorMessage.innerText = data.error;
+            }
+        }
+
+        loginForm.addEventListener("submit", handleLogin);
+    </script>
+</body>
+</html>

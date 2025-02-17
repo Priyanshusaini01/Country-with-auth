@@ -1,0 +1,83 @@
+.btn{
+    
+    padding: 6px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    
+  box-shadow: 0 0px 4px  0px rgba(0, 0, 0, 0.2);
+}
+.country-details-container{
+  max-width: 1200px;
+  margin-inline: auto;
+  margin-top: 32px;
+
+}
+.shimmering{
+  height: 300px;
+  width: 300px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+ 
+
+.country-details{
+  display: flex ;
+  align-items: center;
+  gap: 64px; /* between flag and right text*/
+}
+.country-details img{
+  width:40%; /* because you cant fix size to make dynamic size ratio */
+  margin-top: 64px;
+}
+.details-text{
+  display: flex;
+  flex-direction: column;
+  gap: 12px 64px; /* row col*/
+  max-height: 180px;
+  flex-wrap: wrap ;
+}
+.details-text p{
+  margin: 0;  /* first reduce then use gap in display text*/
+}
+
+@media(max-width:800px) {
+  .country-details{
+    flex-direction: column;
+    align-items: flex-start;/* text align to the flag */
+    gap: 16px;
+  }
+  .details-text{
+    max-height: unset;/* bcz of last setting t reset*/
+  }
+  .country-details img{
+    width: 100%; 
+    max-width:350px ;
+    border: 1px solid #ddd;
+  }
+  .shimmering{
+    height: 100px;
+    width: 250px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+.border-countries{
+  margin-top:48px;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap:wrap;
+  gap:8px;
+
+}
+.border-countries a{
+  padding: 6px 24px;
+    
+  border-radius: 4px;
+  cursor: pointer;
+  margin-inline: 4px;
+  font-size: 14px      ;
+box-shadow: 0 0px 4px  0px rgba(0, 0, 0, 0.2);
+}
