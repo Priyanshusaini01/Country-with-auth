@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creative Auth UI</title>
+    <title>Auth System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
@@ -20,74 +20,109 @@
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
-            position: relative;
         }
 
         .container {
-            width: 400px;
             background: rgba(255, 255, 255, 0.95);
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 1;
-            backdrop-filter: blur(10px);
+            width: 400px;
             text-align: center;
         }
 
         .logo {
-            font-size: 2em;
-            color: white;
-            background: #4ecdc4;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto 20px;
+            font-size: 2.5em;
+            color: #4ecdc4;
+            margin-bottom: 20px;
         }
 
-        h2 { color: #2d3436; }
-        .input-group { position: relative; margin: 20px 0; }
+        h2 {
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
         input {
-            width: 100%; padding: 15px;
-            border-radius: 10px;
-            border: none; background: #f5f6fa;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4ecdc4;
         }
 
         button {
-            width: 100%; padding: 15px;
-            background: linear-gradient(45deg, #4ecdc4, #45b7af);
-            color: white; border: none; border-radius: 10px;
-            cursor: pointer; font-size: 16px; font-weight: 600;
+            width: 100%;
+            padding: 12px;
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: background 0.3s;
         }
 
-        .toggle { margin-top: 15px; cursor: pointer; color: #2d3436; }
-        .toggle:hover { color: #4ecdc4; }
+        button:hover {
+            background: #45b7b0;
+        }
 
-        .loading-screen {
+        .toggle {
+            margin-top: 20px;
+            color: #4ecdc4;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .loading {
             display: none;
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            display: flex; justify-content: center; align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .spinner {
-            border: 5px solid rgba(0, 0, 0, 0.1);
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
             border-top: 5px solid #4ecdc4;
             border-radius: 50%;
-            width: 50px; height: 50px;
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+    
     <div class="container">
-        <div class="logo"><i class="fas fa-user-astronaut"></i></div>
+        <div class="logo">
+            <i class="fas fa-user-lock"></i>
+        </div>
         <h2 id="formTitle">Welcome Back!</h2>
         
         <form id="authForm">
@@ -99,54 +134,94 @@
             </div>
             <button type="submit">Login</button>
         </form>
-        
-        <p class="toggle" id="toggleForm">Don't have an account? Register</p>
+
+        <p class="toggle" id="toggleForm">Don't have an account? Register here.</p>
     </div>
-    
-    <div class="loading-screen" id="loadingScreen">
-        <div class="spinner"></div>
-    </div>
-    
+
     <script>
-        const authForm = document.getElementById("authForm");
-        const formTitle = document.getElementById("formTitle");
-        const toggleForm = document.getElementById("toggleForm");
-        const loadingScreen = document.getElementById("loadingScreen");
-        let isLogin = true;
-        
-        toggleForm.addEventListener("click", () => {
-            isLogin = !isLogin;
-            formTitle.innerText = isLogin ? "Welcome Back!" : "Create Account";
-            authForm.querySelector("button").innerText = isLogin ? "Login" : "Register";
-            toggleForm.innerText = isLogin ? "Don't have an account? Register" : "Already have an account? Login";
+        // Check authentication status on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingScreen = document.getElementById('loading');
+            const token = localStorage.getItem('token');
+            
+            if (token) {
+                loadingScreen.style.display = 'flex';
+                setTimeout(() => loadingScreen.style.opacity = '1', 10);
+                
+                try {
+                    const response = await fetch('http://localhost:5050/validate-token', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (!response.ok) throw new Error('Invalid token');
+                    window.location.href = 'dashboard.html';
+                } catch (error) {
+                    localStorage.removeItem('token');
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => loadingScreen.style.display = 'none', 300);
+                }
+            }
         });
 
-        authForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            loadingScreen.style.display = "flex";
+        // Form handling
+        const authForm = document.getElementById('authForm');
+        const toggleForm = document.getElementById('toggleForm');
+        const formTitle = document.getElementById('formTitle');
+        const loadingScreen = document.getElementById('loading');
+        let isLogin = true;
+
+        toggleForm.addEventListener('click', () => {
+            isLogin = !isLogin;
+            formTitle.textContent = isLogin ? 'Welcome Back!' : 'Create Account';
+            toggleForm.textContent = isLogin 
+                ? "Don't have an account? Register here." 
+                : "Already have an account? Login here.";
             
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-            
-            const url = isLogin ? "http://localhost:5050/login" : "http://localhost:5050/register";
-            const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
-            });
-            
-            const data = await response.json();
-            loadingScreen.style.display = "none";
-            if (response.ok) {
+            authForm.innerHTML = `
+                <div class="input-group">
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit">${isLogin ? 'Login' : 'Register'}</button>
+            `;
+        });
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loadingScreen.style.display = 'flex';
+            setTimeout(() => loadingScreen.style.opacity = '1', 10);
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const endpoint = isLogin ? 'login' : 'register';
+
+            try {
+                const response = await fetch(`http://localhost:5050/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => loadingScreen.style.display = 'none', 300);
+
+                if (!response.ok) throw new Error(data.error || 'Request failed');
+
                 if (isLogin) {
-                    localStorage.setItem("token", data.token);
-                    window.location.href = "dashboard.html";
+                    localStorage.setItem('token', data.token);
+                    window.location.href = 'dashboard.html';
                 } else {
-                    alert("Registration successful. Please log in.");
+                    alert('Registration successful! Please login.');
                     toggleForm.click();
                 }
-            } else {
-                alert(data.error);
+            } catch (error) {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => loadingScreen.style.display = 'none', 300);
+                alert(error.message);
             }
         });
     </script>
